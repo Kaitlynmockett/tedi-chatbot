@@ -25,7 +25,17 @@
     max-width: 800px;
     overflow-x: auto;
 }
+.showSpeaker{
+    background: none;
+    border: none;
+    height: 30px;
+    margin-top: 28px;
+    margin-right: 10px;
+}
 
+.hideSpeaker{
+    display: none;
+}
 .answerHeader {
     position: relative;
 }

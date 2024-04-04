@@ -154,9 +154,11 @@
     top: 13px;
     color: #FFFFFF;
     border-radius: 4px;
-    z-index: 1;
+    z-index: 1;   
 }
-
+button:hover{
+    color: #F0D700 !important;
+}
 .clearChatBroomNoCosmos {
     box-sizing: border-box;
     display: flex;

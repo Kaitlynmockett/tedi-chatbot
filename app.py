@@ -15,6 +15,7 @@ from quart import (
     render_template,
 )
 
+import azure.cognitiveservices.speech as speechsdk
 from openai import AsyncAzureOpenAI
 from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
 from backend.auth.auth_utils import get_authenticated_user_details
@@ -56,7 +57,6 @@ def create_app():
     app.config["TEMPLATES_AUTO_RELOAD"] = True
     return app
 
-
 @bp.route("/")
 async def index():
     return await render_template("index.html", title=UI_TITLE, favicon=UI_FAVICON)
@@ -71,6 +71,44 @@ async def favicon():
 async def assets(path):
     return await send_from_directory("static/assets", path)
 
+@bp.route("/recognise_speech", methods=["POST"])
+async def recognise_speech_from_mic():
+    speech_config = speechsdk.SpeechConfig(subscription=os.environ.get("SPEECH_KEY"), region=os.environ.get("SPEECH_REGION"))
+    audio_config = speechsdk.AudioConfig(use_default_microphone=True)
+    speech_recogniser = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
+
+    result = speech_recogniser.recognize_once_async().get()
+    if result.reason == speechsdk.ResultReason.RecognizedSpeech:
+        return jsonify({'text':"{}".format(result.text)})
+    elif result.reason == speechsdk.ResultReason.NoMatch:
+        raise Exception({'text':"No speech could be recognised"})
+    elif result.reason == speechsdk.ResultReason.Canceled:
+        error_details = result.cancellation_details.error_details
+        raise Exception({'text':"Speech Recognition canceled: {}".format(error_details)})
+
+
+@bp.route("/synthesise_text", methods=["POST"])
+async def transcribe_text():
+    data = await request.get_json()
+    response = data.get("text", {})
+
+    text_json = json.loads(response)
+    answer_text = text_json.get("markdownFormatText", "")
+
+    speech_config = speechsdk.SpeechConfig(subscription=os.environ.get("SPEECH_KEY"), region=os.environ.get("SPEECH_REGION"))
+    audio_config = speechsdk.audio.AudioOutputConfig(use_default_speaker=True)
+    speech_synthesiser = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
+    
+    try:
+        result = speech_synthesiser.speak_text_async(answer_text).get()
+    except Exception as e: 
+        print(f"Error: {e}")
+        raise
+    if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+        return True
+    elif result.reason == speechsdk.ResultReason.Canceled:
+        error_details = result.cancellation_details.error_details
+        raise Exception({'text':"Speech Synthesis canceled: {}".format(error_details)})
 
 # Debug settings
 DEBUG = os.environ.get("DEBUG", "false")

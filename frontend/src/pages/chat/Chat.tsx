@@ -752,14 +752,17 @@ const Chat = () => {
                                         },
                                         root: {
                                             color: '#FFFFFF',
-                                            background: "radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)",
+                                            background: "radial-gradient(87.81% 100.82% at 49.1% 94.19%, #898989 27.63%,68.31%, #242424  100%)",
                                         },
                                         rootDisabled: {
                                             background: "#F0F0F0"
+                                        },
+                                        rootHovered: {
+                                            color: "#F0d700 !important",
                                         }
                                     }}
                                     className={appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured ? styles.clearChatBroom : styles.clearChatBroomNoCosmos}
-                                    iconProps={{ iconName: 'Broom' }}
+                                    iconProps={{ iconName: 'ClearFormattingEraser' }}
                                     onClick={appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured ? clearChat : newChat}
                                     disabled={disabledButton()}
                                     aria-label="clear chat button"
