@@ -50,7 +50,6 @@ UI_CHAT_DESCRIPTION = (
 UI_FAVICON = os.environ.get("UI_FAVICON") or "/favicon.ico"
 UI_SHOW_SHARE_BUTTON = os.environ.get("UI_SHOW_SHARE_BUTTON", "true").lower() == "true"
 
-
 def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
@@ -70,6 +69,9 @@ async def favicon():
 @bp.route("/assets/<path:path>")
 async def assets(path):
     return await send_from_directory("static/assets", path)
+
+# Speech recognition / sythesiser config
+APP_ENDPOINT = os.environ.get("APP_ENDPOINT") or "http://127.0.0.1:50505"
 
 @bp.route("/recognise_speech", methods=["POST"])
 async def recognise_speech_from_mic():
