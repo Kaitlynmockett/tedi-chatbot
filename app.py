@@ -13,6 +13,7 @@ from quart import (
     request,
     send_from_directory,
     render_template,
+    send_file
 )
 
 import azure.cognitiveservices.speech as speechsdk
@@ -70,8 +71,6 @@ async def favicon():
 async def assets(path):
     return await send_from_directory("static/assets", path)
 
-# Speech recognition / sythesiser config
-APP_ENDPOINT = os.environ.get("APP_ENDPOINT") or "http://127.0.0.1:50505"
 
 @bp.route("/recognise_speech", methods=["POST"])
 async def recognise_speech_from_mic():
@@ -79,7 +78,11 @@ async def recognise_speech_from_mic():
     audio_config = speechsdk.AudioConfig(use_default_microphone=True)
     speech_recogniser = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
 
-    result = speech_recogniser.recognize_once_async().get()
+    try:
+        result = speech_recogniser.recognize_once_async().get()
+    except Exception as e:
+        print(f"Error: {e}")
+        raise
     if result.reason == speechsdk.ResultReason.RecognizedSpeech:
         return jsonify({'text':"{}".format(result.text)})
     elif result.reason == speechsdk.ResultReason.NoMatch:
@@ -98,7 +101,8 @@ async def transcribe_text():
     answer_text = text_json.get("markdownFormatText", "")
 
     speech_config = speechsdk.SpeechConfig(subscription=os.environ.get("SPEECH_KEY"), region=os.environ.get("SPEECH_REGION"))
-    audio_config = speechsdk.audio.AudioOutputConfig(use_default_speaker=True)
+    audio_file = "audio_output.mp3"
+    audio_config = speechsdk.audio.AudioOutputConfig(filename=audio_file)
     speech_synthesiser = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
     
     try:
@@ -107,7 +111,7 @@ async def transcribe_text():
         print(f"Error: {e}")
         raise
     if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-        return True
+        return await send_file(audio_file)
     elif result.reason == speechsdk.ResultReason.Canceled:
         error_details = result.cancellation_details.error_details
         raise Exception({'text':"Speech Synthesis canceled: {}".format(error_details)})

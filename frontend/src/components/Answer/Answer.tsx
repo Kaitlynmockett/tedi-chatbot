@@ -61,19 +61,31 @@ export const Answer = ({
 
     const handleTextToSpeech = (text: string) => {
         setIsReading(true);
-        fetch('http://127.0.0.1:50505/synthesise_text', {
+        const audioContext = new AudioContext();
+        fetch('synthesise_text', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ text })
         })
-        .then(response => response.json())
-        .then(data => console.log(data))
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+        .then(audioBuffer => {
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioContext.destination);
+            source.start();
+            setIsReading(false);
+        })
         .catch(error => {
             console.error('Error:', error);
             setIsReading(false);
-        })
+        });
+
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
     };
 
     useEffect(() => {

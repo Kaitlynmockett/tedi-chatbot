@@ -19,7 +19,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
 
     const handleVoiceEnabled = () => {
         setVoiceActive(true);
-        fetch('http://127.0.0.1:50505/recognise_speech', {
+        fetch('/recognise_speech', {
             method: 'POST',
         })
         .then(response => response.json())
