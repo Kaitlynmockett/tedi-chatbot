@@ -3,6 +3,7 @@ import json
 import os
 import logging
 import uuid
+
 from dotenv import load_dotenv
 import httpx
 from quart import (
@@ -17,6 +18,7 @@ from quart import (
 )
 
 import azure.cognitiveservices.speech as speechsdk
+from azure.cognitiveservices.speech.audio import AudioStreamFormat
 from openai import AsyncAzureOpenAI
 from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
 from backend.auth.auth_utils import get_authenticated_user_details
@@ -70,26 +72,6 @@ async def favicon():
 @bp.route("/assets/<path:path>")
 async def assets(path):
     return await send_from_directory("static/assets", path)
-
-
-@bp.route("/recognise_speech", methods=["POST"])
-async def recognise_speech_from_mic():
-    speech_config = speechsdk.SpeechConfig(subscription=os.environ.get("SPEECH_KEY"), region=os.environ.get("SPEECH_REGION"))
-    audio_config = speechsdk.AudioConfig(use_default_microphone=True)
-    speech_recogniser = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
-
-    try:
-        result = speech_recogniser.recognize_once_async().get()
-    except Exception as e:
-        print(f"Error: {e}")
-        raise
-    if result.reason == speechsdk.ResultReason.RecognizedSpeech:
-        return jsonify({'text':"{}".format(result.text)})
-    elif result.reason == speechsdk.ResultReason.NoMatch:
-        raise Exception({'text':"No speech could be recognised"})
-    elif result.reason == speechsdk.ResultReason.Canceled:
-        error_details = result.cancellation_details.error_details
-        raise Exception({'text':"Speech Recognition canceled: {}".format(error_details)})
 
 
 @bp.route("/synthesise_text", methods=["POST"])

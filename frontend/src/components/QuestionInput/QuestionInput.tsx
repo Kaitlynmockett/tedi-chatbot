@@ -5,6 +5,8 @@ import Send from "../../assets/Send.svg";
 import Speak from "../../assets/Speak.svg";
 import styles from "./QuestionInput.module.css";
 
+import * as sdk from "microsoft-cognitiveservices-speech-sdk";
+
 interface Props {
     onSend: (question: string, id?: string) => void;
     disabled: boolean;
@@ -18,20 +20,32 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     const [voiceActive, setVoiceActive] = useState<boolean>(false);
 
     const handleVoiceEnabled = () => {
-        setVoiceActive(true);
-        fetch('/recognise_speech', {
-            method: 'POST',
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data.text);
-            setQuestion(data.text);
-        })
-        .catch(error => {
-            console.error('Error:', error);
+        try{
+            console.log('voiceEnabled')
+            setVoiceActive(true);
+            const speechConfig = sdk.SpeechConfig.fromSubscription("37edcc95785c4488be0f9219f5504a07", "uksouth");
+            const audioConfig = sdk.AudioConfig.fromDefaultMicrophoneInput();
+            const recogniser = new sdk.SpeechRecognizer(speechConfig, audioConfig);
+            
+            recogniser.recognizeOnceAsync(
+                result => {
+                    setVoiceActive(false);
+                    console.log(`Recognized text: ${result.text}`);
+                    recogniser.close();
+                    setQuestion(result.text);
+                },
+                error => {
+                    setVoiceActive(false);
+                    console.error(`Error recognizing speech:', ${error}`);
+                    recogniser.close()
+                }
+            );
+        } catch(err) {
             setVoiceActive(false);
-        })
-    }
+            console.error(`Error in handleVoicEnabled:', ${err}`);
+        }
+        
+    };
 
 
     const sendQuestion = () => {
