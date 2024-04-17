@@ -1,8 +1,5 @@
 import { useState } from "react";
 import { Stack, TextField } from "@fluentui/react";
-import { SendRegular } from "@fluentui/react-icons";
-import Send from "../../assets/Send.svg";
-import Speak from "../../assets/Speak.svg";
 import styles from "./QuestionInput.module.css";
 
 import * as sdk from "microsoft-cognitiveservices-speech-sdk";
